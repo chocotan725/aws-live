@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, redirect
 from pymysql import connections
 import os
 import boto3
@@ -20,15 +20,94 @@ db_conn = connections.Connection(
 output = {}
 table = 'employee'
 
+@app.route("/index")
+def index():
+    cur = db_conn.cursor()
+    cur.execute("SELECT * FROM products")
+    rows = cur.fetchall()
+    cur.close()
+    
+    products = []
+    for row in rows:
+        product = {
+            "id": row[0],
+            "name": row[1],
+            "description": row[2],
+            "price": row[3],
+            "image": row[4]
+        }
+        products.append(product)
+    
+    return render_template("index.html", products=products)
+
+@app.route('/confirm_purchase', methods=['POST'])
+def confirm_purchase():
+    # Retrieve form data
+    product_name = request.form['product_name']
+    product_price = request.form['product_price']
+    address = request.form['address']
+    payment_method = request.form['payment_method']
+
+    insert_sql = "INSERT INTO SALES VALUES (%s,%s,%s,%s,%s)"
+    cursor = db_conn.cursor()
+
+    try:
+        cursor.execute(insert_sql, (product_name,product_price,address,payment_method))
+        db_conn.commit()
+
+    except:
+        print("An Exception Occured")
+
+    finally:
+        cursor.close()
+
+    return render_template('purchase_confirmation.html', product_name=product_name, product_price=product_price, address=address, payment_method=payment_method)
+
+
+
 
 @app.route("/", methods=['GET', 'POST'])
 def home():
     return render_template('AddEmp.html')
 
 
-@app.route("/about", methods=['POST'])
+@app.route("/about", methods=['GET'])
 def about():
-    return render_template('www.intellipaat.com')
+    return redirect('https://sunwaybucket.s3.amazonaws.com/ecommerce.html', code=302)
+
+@app.route("/getemp", methods=['POST'])
+def GetEmp():
+    return render_template('GetEmp.html')
+
+@app.route("/fetchdata", methods=['GET','POST'])
+def GetEmpOutput():
+    if request.method == 'POST':
+        emp_id = request.form['emp_id']
+        select_sql = "SELECT * FROM employee WHERE emp_id = %s"
+        cursor = db_conn.cursor()
+
+        try:
+            cursor.execute(select_sql, (emp_id,))
+            result = cursor.fetchone()
+            if result:
+                emp_data = {
+                    "emp_id": result[0],
+                    "first_name": result[1],
+                    "last_name": result[2],
+                    "pri_skill": result[3],
+                    "location": result[4],
+                    "image_url": "https://s3.{0}.amazonaws.com/{1}/emp-id-{2}_image_file".format(
+                        region, bucket, emp_id)
+                }
+                return render_template('GetEmpOutput.html', emp_data=emp_data)
+            else:
+                return "Employee not found"
+        except Exception as e:
+            return str(e)
+        finally:
+            cursor.close()
+    else:
+        return render_template('GetEmp.html')
 
 
 @app.route("/addemp", methods=['POST'])
