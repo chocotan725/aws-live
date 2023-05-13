@@ -30,11 +30,10 @@ def index():
     products = []
     for row in rows:
         product = {
-            "id": row[0],
-            "name": row[1],
-            "description": row[2],
-            "price": row[3],
-            "image": row[4]
+            "name": row[0],
+            "description": row[1],
+            "price": row[2],
+            "image": row[3]
         }
         products.append(product)
     
