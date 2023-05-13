@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Sunway eMall Beta Online Store</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+</head>
+<body>
+
+    <div class="container">
+
+        <h1>Products</h1>
+
+        <div class="row">
+
+            {% for product in products %}
+
+                <div class="col-sm-4">
+                    <div class="thumbnail">
+                        <img src="{{ product.image }}" alt="Product Image">
+                        <div class="caption">
+                            <h3>{{ product.name }}</h3>
+                            <p>{{ product.description }}</p>
+                            <p><strong>Price:</strong> ${{ product.price }}</p>
+                            <form method="POST" action="/checkout">
+                                <input type="hidden" name="product_id" value="{{ product.id }}">
+                                <input type="hidden" name="product_name" value="{{ product.name }}">
+                                <input type="hidden" name="product_price" value="{{ product.price }}">
+                                <button type="submit" class="btn btn-primary">Buy Now</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+            {% endfor %}
+
+        </div>
+
+    </div>
+    
+    <footer class="container-fluid text-center">
+      <p>Ray Xiang © 2023 Online Store. All Rights Reserved.</p>
+    </footer>
+
+</body>
+</html>
